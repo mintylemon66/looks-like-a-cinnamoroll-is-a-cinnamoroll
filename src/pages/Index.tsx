@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import DifficultySelector from '@/components/DifficultySelector';
+import DifficultySelector, { DifficultyType } from '@/components/DifficultySelector';
 import MathProblem from '@/components/MathProblem';
 import NumberPad from '@/components/NumberPad';
 import SessionStats from '@/components/SessionStats';
 
 const Index = () => {
-  const [difficulty, setDifficulty] = useState<number | null>(null);
+  const [difficulty, setDifficulty] = useState<DifficultyType | null>(null);
   const [currentProblem, setCurrentProblem] = useState<{num1: number, num2: number, answer: number} | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
@@ -18,11 +18,39 @@ const Index = () => {
   const [showResult, setShowResult] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
 
-  const generateProblem = (digits: number) => {
-    const min = Math.pow(10, digits - 1);
-    const max = Math.pow(10, digits) - 1;
-    const num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-    const num2 = Math.floor(Math.random() * (max - min + 1)) + min;
+  const generateProblem = (difficultyType: DifficultyType) => {
+    let num1, num2;
+    
+    switch (difficultyType) {
+      case '1x1':
+        num1 = Math.floor(Math.random() * 9) + 1;
+        num2 = Math.floor(Math.random() * 9) + 1;
+        break;
+      case '2x2':
+        num1 = Math.floor(Math.random() * 90) + 10;
+        num2 = Math.floor(Math.random() * 90) + 10;
+        break;
+      case '3x1':
+        num1 = Math.floor(Math.random() * 900) + 100;
+        num2 = Math.floor(Math.random() * 9) + 1;
+        break;
+      case '3x2':
+        num1 = Math.floor(Math.random() * 900) + 100;
+        num2 = Math.floor(Math.random() * 90) + 10;
+        break;
+      case '3x3':
+        num1 = Math.floor(Math.random() * 900) + 100;
+        num2 = Math.floor(Math.random() * 900) + 100;
+        break;
+      case '4x4':
+        num1 = Math.floor(Math.random() * 9000) + 1000;
+        num2 = Math.floor(Math.random() * 9000) + 1000;
+        break;
+      default:
+        num1 = 1;
+        num2 = 1;
+    }
+    
     return {
       num1,
       num2,
@@ -30,7 +58,7 @@ const Index = () => {
     };
   };
 
-  const startSession = (selectedDifficulty: number) => {
+  const startSession = (selectedDifficulty: DifficultyType) => {
     setDifficulty(selectedDifficulty);
     setSessionStartTime(Date.now());
     setProblemStartTime(Date.now());
@@ -52,29 +80,28 @@ const Index = () => {
     }
   };
 
-  const submitAnswer = () => {
+  // Auto-check answer whenever userAnswer changes
+  useEffect(() => {
     if (!currentProblem || !problemStartTime || userAnswer === '') return;
 
-    const timeSpent = Date.now() - problemStartTime;
-    const isCorrect = parseInt(userAnswer) === currentProblem.answer;
-    
-    setProblemTimes(prev => [...prev, timeSpent]);
-    
-    if (isCorrect) {
+    const userNum = parseInt(userAnswer);
+    if (userNum === currentProblem.answer) {
+      const timeSpent = Date.now() - problemStartTime;
+      setProblemTimes(prev => [...prev, timeSpent]);
       setCorrectAnswers(prev => prev + 1);
+      
+      setShowResult(true);
+      
+      setTimeout(() => {
+        if (difficulty) {
+          setCurrentProblem(generateProblem(difficulty));
+          setProblemStartTime(Date.now());
+          setUserAnswer('');
+          setShowResult(false);
+        }
+      }, 1000);
     }
-
-    setShowResult(true);
-    
-    setTimeout(() => {
-      if (difficulty) {
-        setCurrentProblem(generateProblem(difficulty));
-        setProblemStartTime(Date.now());
-        setUserAnswer('');
-        setShowResult(false);
-      }
-    }, 1500);
-  };
+  }, [userAnswer, currentProblem, problemStartTime, difficulty]);
 
   const endSession = () => {
     setSessionActive(false);
@@ -163,7 +190,6 @@ const Index = () => {
           <div className="lg:col-span-2">
             <NumberPad 
               onNumberClick={handleNumberInput}
-              onSubmit={submitAnswer}
               disabled={showResult}
             />
           </div>
