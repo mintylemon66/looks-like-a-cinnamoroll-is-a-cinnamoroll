@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,8 +14,42 @@ const Index = () => {
   const [problemStartTime, setProblemStartTime] = useState<number | null>(null);
   const [problemTimes, setProblemTimes] = useState<number[]>([]);
   const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [showResult, setShowResult] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [backgroundEmojis, setBackgroundEmojis] = useState<Array<{id: number, emoji: string, x: number, y: number, duration: number}>>([]);
+
+  const cinnamorollEmojis = ['🌸', '☁️', '⭐', '✨', '🌙', '💫', '🦋', '🌺', '🌈', '💝', '🎀', '🧸'];
+
+  // Generate random background emojis
+  useEffect(() => {
+    const generateEmoji = () => {
+      const emoji = cinnamorollEmojis[Math.floor(Math.random() * cinnamorollEmojis.length)];
+      return {
+        id: Date.now() + Math.random(),
+        emoji,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        duration: 3 + Math.random() * 4
+      };
+    };
+
+    const interval = setInterval(() => {
+      setBackgroundEmojis(prev => {
+        const newEmojis = [...prev, generateEmoji()];
+        return newEmojis.slice(-15); // Keep only last 15 emojis
+      });
+    }, 800);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Remove old emojis
+  useEffect(() => {
+    const cleanup = setTimeout(() => {
+      setBackgroundEmojis(prev => prev.slice(1));
+    }, 7000);
+
+    return () => clearTimeout(cleanup);
+  }, [backgroundEmojis]);
 
   const generateProblem = (difficultyType: DifficultyType) => {
     let num1, num2;
@@ -67,7 +100,6 @@ const Index = () => {
     setProblemTimes([]);
     setCorrectAnswers(0);
     setUserAnswer('');
-    setShowResult(false);
   };
 
   const handleNumberInput = (num: string) => {
@@ -80,7 +112,7 @@ const Index = () => {
     }
   };
 
-  // Auto-check answer whenever userAnswer changes
+  // Auto-check answer whenever userAnswer changes - immediate progression
   useEffect(() => {
     if (!currentProblem || !problemStartTime || userAnswer === '') return;
 
@@ -90,16 +122,12 @@ const Index = () => {
       setProblemTimes(prev => [...prev, timeSpent]);
       setCorrectAnswers(prev => prev + 1);
       
-      setShowResult(true);
-      
-      setTimeout(() => {
-        if (difficulty) {
-          setCurrentProblem(generateProblem(difficulty));
-          setProblemStartTime(Date.now());
-          setUserAnswer('');
-          setShowResult(false);
-        }
-      }, 1000);
+      // Immediately move to next problem
+      if (difficulty) {
+        setCurrentProblem(generateProblem(difficulty));
+        setProblemStartTime(Date.now());
+        setUserAnswer('');
+      }
     }
   }, [userAnswer, currentProblem, problemStartTime, difficulty]);
 
@@ -108,7 +136,6 @@ const Index = () => {
     setDifficulty(null);
     setCurrentProblem(null);
     setUserAnswer('');
-    setShowResult(false);
   };
 
   const averageTime = problemTimes.length > 0 
@@ -117,8 +144,23 @@ const Index = () => {
 
   if (!sessionActive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-        <div className="max-w-2xl mx-auto pt-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 relative overflow-hidden">
+        {/* Background Emojis */}
+        {backgroundEmojis.map((emoji) => (
+          <div
+            key={emoji.id}
+            className="absolute text-2xl opacity-20 pointer-events-none animate-pulse"
+            style={{
+              left: `${emoji.x}%`,
+              top: `${emoji.y}%`,
+              animationDuration: `${emoji.duration}s`
+            }}
+          >
+            {emoji.emoji}
+          </div>
+        ))}
+        
+        <div className="max-w-2xl mx-auto pt-8 relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
               ✨ Cinnamoroll Math Trainer ✨
@@ -151,8 +193,24 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 relative overflow-hidden">
+      {/* Background Emojis */}
+      {backgroundEmojis.map((emoji) => (
+        <div
+          key={emoji.id}
+          className="absolute text-3xl opacity-15 pointer-events-none animate-bounce"
+          style={{
+            left: `${emoji.x}%`,
+            top: `${emoji.y}%`,
+            animationDuration: `${emoji.duration}s`,
+            animationDelay: `${Math.random() * 2}s`
+          }}
+        >
+          {emoji.emoji}
+        </div>
+      ))}
+      
+      <div className="max-w-6xl mx-auto relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             ✨ Math Trainer ✨
@@ -180,8 +238,8 @@ const Index = () => {
                 num1={currentProblem.num1}
                 num2={currentProblem.num2}
                 userAnswer={userAnswer}
-                showResult={showResult}
-                isCorrect={showResult ? parseInt(userAnswer) === currentProblem.answer : false}
+                showResult={false}
+                isCorrect={false}
                 correctAnswer={currentProblem.answer}
               />
             )}
@@ -190,7 +248,7 @@ const Index = () => {
           <div className="lg:col-span-2">
             <NumberPad 
               onNumberClick={handleNumberInput}
-              disabled={showResult}
+              disabled={false}
             />
           </div>
         </div>
