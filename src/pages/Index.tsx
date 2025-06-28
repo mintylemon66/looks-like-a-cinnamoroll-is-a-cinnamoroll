@@ -166,7 +166,7 @@ const Index = () => {
               ✨ treadmill multiplication trainer ✨
             </h1>
             <p className="text-xl text-blue-600 font-medium">
-          looks like a cinnamoroll, is a cinnamoroll uwu
+         looks like a cinnamoroll, is a cinnamoroll ❤️✌️
             </p>
           </div>
           
