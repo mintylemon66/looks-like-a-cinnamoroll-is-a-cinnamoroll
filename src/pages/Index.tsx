@@ -163,10 +163,10 @@ const Index = () => {
         <div className="max-w-2xl mx-auto pt-8 relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-              ✨ Cinnamoroll Math Trainer ✨
+              ✨ treadmill multiplication trainer ✨
             </h1>
             <p className="text-xl text-blue-600 font-medium">
-              Practice multiplication with cute Cinnamoroll colors! 🐰
+          looks like a cinnamoroll, is a cinnamoroll uwu
             </p>
           </div>
           
