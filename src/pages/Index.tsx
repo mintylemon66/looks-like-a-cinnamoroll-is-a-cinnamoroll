@@ -51,6 +51,33 @@ const Index = () => {
     return () => clearTimeout(cleanup);
   }, [backgroundEmojis]);
 
+  // Add keyboard event handler
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!sessionActive) return;
+
+      const key = event.key;
+      
+      // Handle number keys (0-9)
+      if (/^[0-9]$/.test(key)) {
+        handleNumberInput(key);
+      }
+      // Handle backspace
+      else if (key === 'Backspace') {
+        event.preventDefault();
+        handleNumberInput('backspace');
+      }
+      // Handle delete or escape for clear
+      else if (key === 'Delete' || key === 'Escape') {
+        event.preventDefault();
+        handleNumberInput('clear');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [sessionActive]);
+
   const generateProblem = (difficultyType: DifficultyType) => {
     let num1, num2;
     
